@@ -49,3 +49,5 @@ export const SelectBudgetOptions = [
     icon: '💸',
   },
 ]
+
+export const AI_PROMT = 'Generate Travel Plan for Location : {location} for {totalDays} Days for {traveler} with a {budget} budget, give me a hotels option list.';  // eslint-disable-line
