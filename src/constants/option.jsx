@@ -4,28 +4,28 @@ export const SelectTravelList = [
     title:  'Just Me',
     desc: 'A sole traveles in exploration',
     icon: '✈️',
-    pepple: 1
+    people: 1
   },
   {
     id:2,
     title:  'A couple',
     desc: 'A group of friends travelling together',
     icon: '🥂',
-    pepple: 2
+    people: 2
   },
   {
     id:3,
     title:  'Family',
     desc: 'A family traveles in exploration',
     icon: '🏡',
-    pepple: '3 to 5 people'
+    people: '3 to 5 people'
   },
   {
     id:4,
     title:  'Group',
     desc: 'A group traveles in exploration',
     icon: '👥',
-    pepple: '6 to 10 people'
+    people: '6 to 10 people'
   },
 ]
 
