@@ -5,13 +5,26 @@ import { chatSession } from "@/service/AIModal";
 import React, { useEffect } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { FcGoogle } from "react-icons/fc";
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 
 function CreateTrip() {
   const [place, setPlace] = React.useState();
 
   const [formData, setFormData] = React.useState([]);
 
-  const handleInputChange = (name, value) => { 
+  const [openDialog, setOpenDialog] = React.useState(false);
+
+  const handleInputChange = (name, value) => {
     setFormData({
       ...formData,
       [name]: value,
@@ -22,24 +35,64 @@ function CreateTrip() {
     console.log(formData);
   }, [formData]);
 
-const OnGenerateTrip = async() => {
-  if (formData?.noOfDays > 5 && !formData?.location || !formData?.budget || !formData?.traveler) {
-    toast("Please fill all the details.");
-    return;
-  }
-  const FINAL_PROMT = AI_PROMT
-    .replace("{location}", formData?.location?.label)
-    .replace("{totalDays}", formData?.noOfDays)
-    .replace("{traveler}", formData?.traveler)
-    .replace("{budget}", formData?.budget)
-    .replace("{totalDays}", formData?.noOfDays)
+  const login = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      console.log(tokenResponse);
+      localStorage.setItem("user", JSON.stringify(tokenResponse));
+      setOpenDialog(false);
+    },
+    onError: (error) => {
+      console.log("Login Failed:", error);
+    },
+  });
 
-  console.log(FINAL_PROMT);
-  
-  const  result = await chatSession.sendMessage(FINAL_PROMT);
+  const OnGenerateTrip = async () => {
+    const user = localStorage.getItem("user");
 
-  console.log(result?.response.text());
-}
+    if (!user) {
+      setOpenDialog(true);
+      return;
+    }
+
+    if (
+      (formData?.noOfDays > 5 && !formData?.location) ||
+      !formData?.budget ||
+      !formData?.traveler
+    ) {
+      toast("Please fill all the details.");
+      return;
+    }
+    const FINAL_PROMT = AI_PROMT.replace(
+      "{location}",
+      formData?.location?.label
+    )
+      .replace("{totalDays}", formData?.noOfDays)
+      .replace("{traveler}", formData?.traveler)
+      .replace("{budget}", formData?.budget)
+      .replace("{totalDays}", formData?.noOfDays);
+
+    console.log(FINAL_PROMT);
+
+    const result = await chatSession.sendMessage(FINAL_PROMT);
+
+    console.log(result?.response.text());
+  };
+
+  const GetUserProfile = (tokenInfo) => {
+    axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenInfo?.access_token}`, {
+      headers: {
+        Authorization: `Bearer ${tokenInfo?.access_token}`,
+        Accept: "application/json",
+      },
+    }).then((res) => {
+      console.log(res);
+      localStorage.setItem("user", JSON.stringify(res?.data));
+      setOpenDialog(false);
+      OnGenerateTrip();
+    }).catch((err) => {
+      console.log(err);
+    });
+  };
 
   return (
     <div className="sm:px-10 md:px-32 lg:px-56 xl:px-10 px-5 mt-10">
@@ -131,6 +184,24 @@ const OnGenerateTrip = async() => {
       <div className="my-10 justify-end flex">
         <Button onClick={OnGenerateTrip}>Generate Trip</Button>
       </div>
+      <Dialog open={openDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogDescription>
+              <img src="./logo.svg" alt="logo" className="w-10 h-10" />
+              <h2 className="font-bold text-lg mt-7">Sign In With Google</h2>
+              <p>Sign in to the App with Google authentication securely</p>
+              <Button
+                onClick={login}
+                className="w-full mt-5 flex gap-4 items-center justify-center"
+              >
+                <FcGoogle className="h-7 w-7" />
+                Sign In With Google
+              </Button>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
