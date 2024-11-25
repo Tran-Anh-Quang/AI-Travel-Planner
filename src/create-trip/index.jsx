@@ -18,6 +18,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { setDoc } from "firebase/firestore";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { useNavigate } from "react-router-dom";
 
 function CreateTrip() {
   const [place, setPlace] = React.useState();
@@ -27,6 +28,8 @@ function CreateTrip() {
   const [openDialog, setOpenDialog] = React.useState(false);
 
   const [loading, setLoading] = React.useState(false);
+
+  const navigate = useNavigate();
 
   const handleInputChange = (name, value) => {
     setFormData({
@@ -111,11 +114,12 @@ function CreateTrip() {
     const docId = Date.now().toString();
     await setDoc(doc(db, "AITrips", docId), {
       userSelection: formData,
-      tripData: tripData,
+      tripData: Json.parse(tripData),
       userEmail: user?.email,
       id: docId,
     });
     setLoading(false);
+    navigate('/view-trip/' + docId);
   };
 
   return (
